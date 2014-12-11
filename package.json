@@ -1,10 +1,10 @@
 {
   "name": "lowladb-node-mongo",
-  "version": "0.0.1",
-  "license": "MIT",
+  "description": "LowlaDB Datastore for MongoDB",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "git://github.com/lowla/lowladb-node.git"
+    "url": "git://github.com/lowla/lowladb-node-mongo.git"
   },
   "files": [
     "LICENSE",
