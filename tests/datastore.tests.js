@@ -505,7 +505,7 @@ describe('Datastore', function () {
         var collections = {};
         for (var i = 0; i < results.length; i++) {
           results.length.should.equal(30);
-          var clientNs = Datastore.namespaceFromId(results[i].lowlaId);
+          var clientNs = _ds.namespaceFromId(results[i].lowlaId);
           var collectionName = clientNs.substring(clientNs.indexOf('.') + 1);
           collections[collectionName]=true;
           results[i].doc.name.should.equal(collectionName + "_" + results[i].doc.a)
