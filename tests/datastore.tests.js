@@ -417,33 +417,41 @@ describe('Datastore', function () {
         });
     });
 
-    it('creates a conflict', function () {  //TODO conflict not handled, update ignored
-      var seeds = testUtil.createDocs("foo", 1);
-      seeds[0]._version=2;
-      return testUtil.mongo.insertDocs(_db, "TestCollection", seeds)
+    it('fails on conflicts', function() {
+      return _ds.updateDocumentByOperations('dbName.collName$1234', undefined, { $set: { a: 1, b: 2 }, $inc: { _version: 1 }})
+        .then(function(doc) {
+          doc._version.should.equal(1);
+          return _ds.updateDocumentByOperations('dbName.collName$1234', 1, { $set: { a: 2, b: 4 }, $inc: { _version: 1 }})
+        })
+        .then(function(doc) {
+          doc._version.should.equal(2);
+          doc.a.should.equal(2);
+          doc.b.should.equal(4);
+          return _ds.updateDocumentByOperations('dbName.collName$1234', 1, { $set: { a: 22, b: 44 }, $inc: { _version: 1 }});
+        })
         .then(function() {
-          return testUtil.mongo.findDocs(_db, 'TestCollection', {});
-        }).then(function(docs){
-          docs.length.should.equal(1);
-          docs[0].a.should.equal(1);
-          docs[0].b.should.equal(2);
-          docs[0]._version.should.equal(2);
-          var oldVers = 1;
-          var ops = {
-            $set: {
-              a: 99,
-              b: 5
-            }
-          };
-          return _ds.updateDocumentByOperations(testUtil.createLowlaId(_dbName, 'TestCollection', docs[0]._id), oldVers,  ops);
-        }).then(null, function(result){
-          result.isConflict.should.be.true;
-          should.not.exist(result.document);
-          return testUtil.mongo.findDocs(_db, 'TestCollection', {});
-        }).then(function(docs) {
-          docs.length.should.equal(1);
-          docs[0].a.should.equal(1);
-          docs[0].b.should.equal(2);
+          throw Error('Should not have resolved on conflict doc');
+        }, function(err) {
+          err.should.deep.equal({isConflict: true});
+        });
+    });
+
+    it('can force updates on otherwise conflicting ops', function() {
+      return _ds.updateDocumentByOperations('dbName.collName$1234', undefined, { $set: { a: 1, b: 2 }, $inc: { _version: 1 }})
+        .then(function(doc) {
+          doc._version.should.equal(1);
+          return _ds.updateDocumentByOperations('dbName.collName$1234', 1, { $set: { a: 2, b: 4 }, $inc: { _version: 1 }})
+        })
+        .then(function(doc) {
+          doc._version.should.equal(2);
+          doc.a.should.equal(2);
+          doc.b.should.equal(4);
+          return _ds.updateDocumentByOperations('dbName.collName$1234', 1, { $set: { a: 22, b: 44 }, $inc: { _version: 1 }}, true);
+        })
+        .then(function(doc) {
+          doc.a.should.equal(22);
+          doc.b.should.equal(44);
+          doc._version.should.equal(3);
         });
     });
 
@@ -459,6 +467,18 @@ describe('Datastore', function () {
           return testUtil.mongo.findDocs(_db, 'TestCollection', {});
         }).then(function(docs) {
           docs.length.should.equal(0);
+        });
+    });
+
+    it('conflicts if versions do not match', function() {
+      return _ds.updateDocumentByOperations('dbName.collName$1234', undefined, { $set: { a: 1, _version: 5 }})
+        .then(function() {
+          return _ds.removeDocument('dbName.collName$1234', 3);
+        })
+        .then(function() {
+          throw Error('Should not have removed document!');
+        }, function(err) {
+          err.isConflict.should.equal(true);
         });
     });
 
