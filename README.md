@@ -1,5 +1,5 @@
 
-# LowlaDB-Node-Mongo #
+# LowlaDB-Node-Mongo [![Build Status](https://travis-ci.org/lowla/lowladb-node-mongo.svg)](https://travis-ci.org/lowla/lowladb-node-mongo)
 
 > A MongoDB Datastore for LowlaDB on Node servers.
 
