@@ -487,13 +487,10 @@ describe('Datastore', function () {
 
   describe('Retrieves documents', function () {
 
-    beforeEach(function (done) {
-      testUtil.mongo.insertDocs(_db, "TestCollection", testUtil.createDocs("TestCollection_", 10))
+    beforeEach(function() {
+      return testUtil.mongo.insertDocs(_db, "TestCollection", testUtil.createDocs("TestCollection_", 10))
         .then(testUtil.mongo.insertDocs(_db, "TestCollection2", testUtil.createDocs("TestCollection2_", 10)))
-        .then(testUtil.mongo.insertDocs(_db, "TestCollection3", testUtil.createDocs("TestCollection3_", 10)))
-        .then(function () {
-          done();
-        });
+        .then(testUtil.mongo.insertDocs(_db, "TestCollection3", testUtil.createDocs("TestCollection3_", 10)));
     });
 
     it('gets a doc by id', function () {
