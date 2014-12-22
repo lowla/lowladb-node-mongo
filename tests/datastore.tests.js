@@ -12,7 +12,7 @@ testUtil.enableLongStackSupport();
 var _db;
 var _ds;
 var _dbName;
-
+var monogoVer;
 
 describe('Datastore', function () {
 
@@ -22,7 +22,18 @@ describe('Datastore', function () {
       testUtil.mongo.openDatabase('mongodb://127.0.0.1/lowladbtest').then(function (db) {
         _db = db;
         _dbName = _db.databaseName;
-        done();
+        db.command({serverStatus: 1}, function (err, result) {
+          if (err) {
+            return done(err);
+          }
+          if (!result || !result.version) {
+            return done(Error('Unable to obtain Mongo version'));
+          }
+
+          mongoVer = parseFloat(result.version);
+          console.log("Detected MongoDB version: " + result.version);
+          done();
+        });
       });
     });
   });
@@ -486,7 +497,6 @@ describe('Datastore', function () {
 
 
   describe('Retrieves documents', function () {
-
     beforeEach(function() {
       return testUtil.mongo.insertDocs(_db, "TestCollection", testUtil.createDocs("TestCollection_", 10))
         .then(testUtil.mongo.insertDocs(_db, "TestCollection2", testUtil.createDocs("TestCollection2_", 10)))
@@ -507,6 +517,11 @@ describe('Datastore', function () {
     });
 
     it('gets all docs from all collections', function () {
+      if (mongoVer < 2.6) {
+        console.log("Skipping test on MongoDB version " + mongoVer);
+        return;
+      }
+
       var h = createResultHandler();
       h.start();
       return _ds.getAllDocuments(h).then(function (result) {
@@ -538,6 +553,11 @@ describe('Datastore', function () {
   describe('Basics', function(){
 
     it('gets collection names', function(){
+      if (mongoVer < 2.6) {
+        console.log("Skipping test in MongoDB version " + mongoVer);
+        return;
+      }
+
       return testUtil.mongo.insertDocs(_db, "aCollection", testUtil.createDocs("TestCollection_", 1))
         .then(testUtil.mongo.insertDocs(_db, "bCollection", testUtil.createDocs("TestCollection2_", 1)))
         .then(testUtil.mongo.insertDocs(_db, "cCollection", testUtil.createDocs("TestCollection3_", 1)))
