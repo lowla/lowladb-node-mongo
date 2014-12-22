@@ -12,7 +12,7 @@ testUtil.enableLongStackSupport();
 var _db;
 var _ds;
 var _dbName;
-var monogoVer;
+var mongoVer;
 
 describe('Datastore', function () {
 
